@@ -5,8 +5,14 @@
 #	START DATE: 18 Dec 2016
 
 
-# Before running this code, install "quantmod" and "xts"
-# Before running this code, create a directory
+# Before running this code, install the following packages: (uncomment to install)
+
+	# install.packages("readxl")
+	# install.packages("quantmod")
+	# install.packages("PerformanceAnalytics")
+	# install.packages("xts")
+
+# Before running this code, ensure that date is in dd-mm-yyyy format and currency is INR million
 # To run this code, you need to enter names of 2 .xlsx files
 #	"file_1" corresponds to the file containing the following (this is got from ProwessIQ):
 		# Prowess company code
@@ -48,22 +54,61 @@
 # PSEUDOCODE END #
 ##################
 
+rm(list=ls())
 
 ##############
 # USER SPACE #
 ##############
 
-#	User needs to input a .xlsx file and must ensure that date is in dd-mm-yyyy format and currency is INR million
-
-# tick: Ticker of stock
-tick = "AMZN"
-# start date in yyyy-mm-dd format
-date_start = "2010-12-31"
-# end date in yyyy-mm-dd format
-date_end = "2013-12-31"
 # your working directory
 dir = "E:/Subjects/Winter_2016/G_SCORE"
-
+# file_1
+file_1 = "mohanram_data_2.xlsx"
+# file_2
+file_2 = "mohanram_data_capital_exp.xlsx"
+# BSE or NSE stock prices. If NSE = FALSE, then BSE prices will be taken
+NSE = TRUE
+# start_year (the G_SCORE will be calculated for the fiscal year (start_year<->start_year+1) and validation will be done on (start_year+1<->start_year+2))
+start_year = 2014
 ##################
 # USER SPACE END #
 ##################
+
+
+setwd(dir)
+library(readxl)
+library(quantmod)
+library(PerformanceAnalytics)
+library(xts)
+
+data_file_1<-read_excel(file_1)
+num_var_file_1<-dim(data_file_1)[2]
+
+# Indicators: NA: 0, BSE: 1, NSE: 2, Anything else: 4
+exchange_file_1<-vector(length = num_var_file_1)
+flag<-c()
+for (i in 1:num_var_file_1) {
+	if(is.na(data_file_1[1, i])){
+		exchange_file_1[i]<-0
+		} else{
+			if(data_file_1[1, i] == "NSE"){
+				exchange_file_1[i]<-2
+				} else {
+					if(data_file_1[1, i] == "BSE"){
+						exchange_file_1[i]<-1
+					} else{
+						exchange_file_1[i]<-4
+						flag<-c(flag, "warning line 101")
+					}
+				}
+			}
+}
+
+temp<-vector(length = num_var_file_1)
+for (i in 1:num_var_file_1) {
+	temp[i]<-"date"
+}
+data_file_1<-read_excel(file_1, col_types = temp)
+dates_file_1<-data_file_1[4,]
+
+data_file_1<-read_excel(file_1, skip = 5)
