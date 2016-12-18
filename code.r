@@ -7,16 +7,43 @@
 
 # Before running this code, install "quantmod" and "xts"
 # Before running this code, create a directory
+# To run this code, you need to enter names of 2 .xlsx files
+#	"file_1" corresponds to the file containing the following (this is got from ProwessIQ):
+		# Prowess company code
+		# Industry group code
+		# Net sales
+		# Total income net of P&E
+		# Net cash flow from operating activities
+		# Research & development expenses
+		# Advertising expenses
+		# Rent & lease rent
+		# Repairs & maintenance
+		# Depreciation (net of transfer from revaluation reserves)
+		# Adjusted Closing Price
+		# BV per Share
+#	"file_2" corresponds to the file containing the following (this is got from ProwessDX):
+	# This file only contains info about Capital Expenditure which was unavailable in ProwessIQ
+		# cas_qsegbrk_cocode
+		# cas_company_name
+		# cas_qsegbrk_info_type
+		# cas_seg_date
+		# cas_seg_name
+		# cas_seg_cap_exp
+		# cas_unallocable_cap_exp_seg
 
 ##############
 # PSEUDOCODE #
 ##############
-# 1. Take input of filename from user
-# 2. Remove top 4 columns from input NO (need to know if the date is from annual or quarterly dataset (this won't be an issue cause variables in annual and variables in quarterly subset are different (non intersecting)))
+# 1. Take input of following from user:
+#		filename (both files)
+#		NSE/BSE price preference
+#		start year, end year (= start year + 1) and validation year (= end year + 1)
+# 2. Remove top 4 rows AND price columns not containing data of user input preference
 # 3. From the 5th column, extract date_start and date_end by creating an ARRAY of all the values of dates in the data
-# which exchange's  value to take
-# handling missing values
-# ask user if she wants to take BSE or NSE prices (in second row of data)
+# 4. Handling missing values
+# 5. Find all indicators
+# how to arrange data?
+# how to read excel?
 ##################
 # PSEUDOCODE END #
 ##################
