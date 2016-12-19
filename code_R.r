@@ -18,7 +18,7 @@
 		# Prowess company code
 		# Industry group code
 		# Net sales
-		# Total income net of P&E
+		# Total income net of P&E (this is quarterly data)
 		# Net cash flow from operating activities
 		# Research & development expenses
 		# Advertising expenses
@@ -61,7 +61,8 @@ rm(list=ls())
 ##############
 
 # your working directory
-dir = "E:/Subjects/Winter_2016/G_SCORE"
+# dir = "E:/Subjects/Winter_2016/G_SCORE"
+dir = "C:/Users/TradingLab15/Desktop/G_SCORE"
 # file_1
 file_1 = "mohanram_data_2.xlsx"
 # file_2
@@ -111,4 +112,22 @@ for (i in 1:num_var_file_1) {
 data_file_1<-read_excel(file_1, col_types = temp)
 dates_file_1<-data_file_1[4,]
 
+
 data_file_1<-read_excel(file_1, skip = 5)
+
+# Calculating G1
+
+# Find the first column containing data of year=start_year
+# Extract and sum the "Total income net of P&E" from this + the next 3 (corresponding) columns (because the data is quarterly)
+temp = 0
+for (i in 1:num_var_file_1){
+	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == start_year)){
+		if((format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == start_year) && (names(data_file_1)[i] == "Total income net of P&E")){
+			temp = i
+			break
+		}
+	}
+}
+
+G_SCORE.table<-data_file_1[,1:3]
+G_SCORE.table$Annual_Net_Income<-(data_file_1[, temp] + data_file_1[, temp+2] + data_file_1[, temp+4] + data_file_1[, temp+6])
