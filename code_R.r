@@ -36,6 +36,13 @@
 		# cas_seg_name
 		# cas_seg_cap_exp
 		# cas_unallocable_cap_exp_seg
+#	"file_3" corresponds to the file containing the following (this is got from ProwessDX):
+	# This file only contains info about Annual Average Assets
+		# ca_finance1_cocode
+		# ca_company_name
+		# ca_finance1_year
+		# ca_months
+		# ca_avg_total_assets_net_of_reval
 
 ##############
 # PSEUDOCODE #
@@ -64,9 +71,11 @@ rm(list=ls())
 # dir = "E:/Subjects/Winter_2016/G_SCORE"
 dir = "C:/Users/TradingLab15/Desktop/G_SCORE"
 # file_1
-file_1 = "mohanram_data_2.xlsx"
+file_1 = "mohanram_data_prowessIQ.xlsx"
 # file_2
 file_2 = "mohanram_data_capital_exp.xlsx"
+# file_3
+file_3 = "mohanram_data_avg_assets.xlsx"
 # BSE or NSE stock prices. If NSE = FALSE, then BSE prices will be taken
 NSE = TRUE
 # start_year (the G_SCORE will be calculated for the fiscal year (start_year<->start_year+1) and validation will be done on (start_year+1<->start_year+2))
