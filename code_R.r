@@ -393,3 +393,43 @@ G_SCORE.table$G7<-((G_SCORE.table$capex_unalloc + G_SCORE.table$capex_alloc) > G
 G_SCORE.table$G8<-(G_SCORE.table$AdEx > G_SCORE.table$median_advin)
 
 G_SCORE.table$G_SCORE<-(G_SCORE.table$G8 + G_SCORE.table$G7 + G_SCORE.table$G6 + G_SCORE.table$G5 + G_SCORE.table$G4 + G_SCORE.table$G3 + G_SCORE.table$G2 + G_SCORE.table$G1)
+
+
+
+RESULTS<-G_SCORE.table[, 1:2]
+RESULTS$G_SCORE<-G_SCORE.table$G_SCORE
+
+temp_2=0
+for (i in 1:num_var_file_1){
+	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year+1))){
+		if((format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year+1)) && (names(data_file_1)[i] == "Adjusted Closing Price ") && (exchange_file_1[i] == NSE_or_BSE)){
+			temp_2 = i
+			break
+		}
+	}
+}
+price_i<-data_file_1[,temp_2]
+
+temp_2=0
+for (i in 1:num_var_file_1){
+	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year+2))){
+		if((format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year+2)) && (names(data_file_1)[i] == "Adjusted Closing Price ") && (exchange_file_1[i] == NSE_or_BSE)){
+			temp_2 = i
+			break
+		}
+	}
+}
+price_f<-data_file_1[,temp_2]
+
+ret<-data.frame(cocode=integer(),
+	RETURNS=numeric(),
+	stringsAsFactors=FALSE)
+
+temp<-(price_f/price_i - 1)
+
+for (i in 1:dim(data_file_1)[1]){
+	ret<-rbind(ret, c(data_file_1$`Prowess company code`[i], temp[i]))
+}
+names(ret)[1:2]<-c("Prowess company code", "RETURNS")
+
+RESULTS<-merge(RESULTS, ret)
