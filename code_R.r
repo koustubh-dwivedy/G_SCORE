@@ -131,7 +131,7 @@ dates_file_1<-data_file_1[4,]
 
 data_file_1<-read_excel(file_1, skip = 5)
 
-# Calculating G1
+# Collecting G1
 
 # Find the first column containing data of year=start_year
 # Extract and sum the "Total income net of P&E" from this + the next 3 (corresponding) columns (because the data is quarterly)
@@ -148,7 +148,7 @@ for (i in 1:num_var_file_1){
 G_SCORE.table<-data_file_1[,1:3]
 G_SCORE.table$Annual_Net_Income<-(data_file_1[, temp+2] + data_file_1[, temp+4] + data_file_1[, temp+6] + data_file_1[, temp+8])
 
-# Calculating G4
+# Collecting G4
 # Earnings Variability
 G_SCORE.table$Earnings_Variability<-0
 for(i in 1:dim(data_file_1)[1]){
@@ -156,7 +156,7 @@ for(i in 1:dim(data_file_1)[1]){
 }
 
 
-# Calculating G5
+# Collecting G5
 # Sales Variability
 temp = 0
 for (i in 1:num_var_file_1){
@@ -174,7 +174,32 @@ for(i in 1:dim(data_file_1)[1]){
 }
 
 
-# Calculating G2
+# Collecting G6
+temp = 0
+for (i in 1:num_var_file_1){
+	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year + 1))){
+		if((format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year + 1)) && (names(data_file_1)[i] == "Research & development expenses")){
+			temp = i
+			break
+		}
+	}
+}
+G_SCORE.table$RnD<-data_file_1[, temp]
+
+
+# Collecting G8
+temp = 0
+for (i in 1:num_var_file_1){
+	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year + 1))){
+		if((format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year + 1)) && (names(data_file_1)[i] == "Advertising expenses")){
+			temp = i
+			break
+		}
+	}
+}
+G_SCORE.table$AdEx<-data_file_1[, temp]
+
+# Collecting G2
 temp = 0
 for (i in 1:num_var_file_1){
 	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year + 1))){
@@ -188,7 +213,7 @@ for (i in 1:num_var_file_1){
 G_SCORE.table$Net_Cash_Flow<-(data_file_1[, temp])
 
 
-# Calculating G1
+# Collecting G1
 data_file_3<-read_excel(file_3)
 
 avg_tot_asset_data<-data.frame(cocode=integer(),
@@ -208,3 +233,41 @@ while(1){
 }
 names(avg_tot_asset_data)[1:2]<-c("Prowess company code", "avg_tot_asset")
 G_SCORE.table<-merge(G_SCORE.table, avg_tot_asset_data)
+
+# Collecting G7
+data_file_2<-read_excel(file_2)
+
+capex_alloc_data<-data.frame(cocode=integer(),
+	capex_alloc=numeric(),
+	stringsAsFactors=FALSE)
+temp = 1
+while(1){
+	if(temp <= dim(data_file_2)[1]){
+			if((format(as.Date(data_file_2$cas_seg_date[temp], format = "%d-%m-%Y"), "%Y") == (start_year + 1)) && (data_file_2$cas_seg_name[temp] == "ALL SEGMENTS")){
+				capex_alloc_data<-rbind(capex_alloc_data, c(data_file_2$cas_qsegbrk_cocode[temp], as.numeric(data_file_2$cas_seg_cap_exp[temp])))
+			}
+			temp = temp + 1
+		} else{
+			break
+		}
+}
+names(capex_alloc_data)[1:2]<-c("Prowess company code", "capex_alloc")
+G_SCORE.table<-merge(G_SCORE.table, capex_alloc_data)
+
+capex_unalloc_data<-data.frame(cocode=integer(),
+	capex_unalloc=numeric(),
+	stringsAsFactors=FALSE)
+temp = 1
+while(1){
+	if(temp <= dim(data_file_2)[1]){
+			if((format(as.Date(data_file_2$cas_seg_date[temp], format = "%d-%m-%Y"), "%Y") == (start_year + 1)) && (data_file_2$cas_seg_name[temp] == "ALL SEGMENTS")){
+				capex_unalloc_data<-rbind(capex_unalloc_data, c(data_file_2$cas_qsegbrk_cocode[temp], as.numeric(data_file_2$cas_unallocable_cap_exp_seg[temp])))
+			}
+			temp = temp + 1
+		} else{
+			break
+		}
+}
+names(capex_unalloc_data)[1:2]<-c("Prowess company code", "capex_unalloc")
+G_SCORE.table<-merge(G_SCORE.table, capex_unalloc_data)
+
