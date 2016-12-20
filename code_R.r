@@ -19,6 +19,7 @@
 # NOTE #
 ########
 # I am assuming that in file_1, the pattern of: "Net sales, Total income net of P&E" repeats and that too continuously (difference of 2 between consecutive "Net sales" elements and "Total income net of P&E" elements)
+# I am assuming that in file_1, "Adjusted Closing Price " and "BV per Share " also form a pattern similar to above
 
 # To run this code, you need to enter names of 2 .xlsx files
 #	"file_1" corresponds to the file containing the following (this is got from ProwessIQ):
@@ -115,7 +116,7 @@ for (i in 1:num_var_file_1) {
 						exchange_file_1[i]<-1
 					} else{
 						exchange_file_1[i]<-4
-						flag<-c(flag, "warning line 118")
+						flag<-c(flag, "warning line 119")
 					}
 				}
 			}
@@ -147,6 +148,24 @@ for (i in 1:num_var_file_1){
 
 G_SCORE.table<-data_file_1[,1:3]
 G_SCORE.table$Annual_Net_Income<-(data_file_1[, temp+2] + data_file_1[, temp+4] + data_file_1[, temp+6] + data_file_1[, temp+8])
+
+# Get BM ratio of firms at start_year+1
+NSE_or_BSE = 1
+if(NSE){
+	NSE_or_BSE = 2
+}
+temp_2 = 0
+for (i in 1:num_var_file_1){
+	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == start_year)){
+		if((format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == start_year) && (names(data_file_1)[i] == "Adjusted Closing Price ") && (exchange_file_1[i] == NSE_or_BSE)){
+			temp_2 = i
+			break
+		}
+	}
+}
+G_SCORE.table$BM_ratio<-(data_file_1[,temp_2+1]/data_file_1[,temp_2])
+num_firms = dim(G_SCORE.table)[1]
+num_firms = floor(num_firms)
 
 # Collecting G4
 # Earnings Variability
@@ -212,6 +231,9 @@ for (i in 1:num_var_file_1){
 
 G_SCORE.table$Net_Cash_Flow<-(data_file_1[, temp])
 
+# Keep bottom 20 percentile firms
+G_SCORE.table<-G_SCORE.table[order(G_SCORE.table$BM_ratio, decreasing = FALSE),]
+G_SCORE.table<-G_SCORE.table[1:num_firms,]
 
 # Collecting G1
 data_file_3<-read_excel(file_3)
@@ -270,4 +292,95 @@ while(1){
 }
 names(capex_unalloc_data)[1:2]<-c("Prowess company code", "capex_unalloc")
 G_SCORE.table<-merge(G_SCORE.table, capex_unalloc_data)
+
+# Removing data with BM_ratio, Annual_Net_Income, avg_tot_asset and capex_alloc = NA
+# Converting NA values of RnD, AdEx and capex_unalloc to 0
+# This should give data with no missing values
+G_SCORE.table<-G_SCORE.table[complete.cases(G_SCORE.table$BM_ratio),]
+G_SCORE.table<-G_SCORE.table[complete.cases(G_SCORE.table$avg_tot_asset),]
+G_SCORE.table<-G_SCORE.table[complete.cases(G_SCORE.table$Annual_Net_Income),]
+G_SCORE.table<-G_SCORE.table[complete.cases(G_SCORE.table$capex_alloc),]
+# The following converts all remaining NA data to 0
+G_SCORE.table[is.na(G_SCORE.table)]<-0
+
+G_SCORE.table$ROA1<-G_SCORE.table$Annual_Net_Income/G_SCORE.table$avg_tot_asset
+G_SCORE.table$ROA2<-G_SCORE.table$Net_Cash_Flow/G_SCORE.table$avg_tot_asset
+G_SCORE.table$G3<-(G_SCORE.table$Net_Cash_Flow > G_SCORE.table$Annual_Net_Income)
+
+# Ordering by BM ratio
+G_SCORE.table<-G_SCORE.table[order(G_SCORE.table$`Industry group code`),]
+
+
+counter = 1
+temp = 0
+read = 0
+ROA1_vec<-c()
+ROA2_vec<-c()
+earn_var_vec<-c()
+sales_var_vec<-c()
+rnd_vec<-c()
+capex_vec<-c()
+advin_vec<-c()
+
+G_SCORE.table$median_ROA1<-0
+G_SCORE.table$median_ROA2<-0
+G_SCORE.table$median_earn_var<-0
+G_SCORE.table$median_sales_var<-0
+G_SCORE.table$median_rnd<-0
+G_SCORE.table$median_capex<-0
+G_SCORE.table$median_advin<-0
+
+while(1){
+	if(counter < dim(G_SCORE.table)[1]){
+		temp = G_SCORE.table[counter, 3]
+		while(1){
+			if(!is.na(G_SCORE.table[counter, 3])){
+			if(temp == G_SCORE.table[counter, 3]){
+				ROA1_vec<-c(ROA1_vec, G_SCORE.table$ROA1[counter])
+				ROA2_vec<-c(ROA2_vec, G_SCORE.table$ROA2[counter])
+				earn_var_vec<-c(earn_var_vec, G_SCORE.table$Earnings_Variability[counter])
+				sales_var_vec<-c(sales_var_vec, G_SCORE.table$Sales_Variability[counter])
+				rnd_vec<-c(rnd_vec, G_SCORE.table$RnD[counter])
+				capex_vec<-c(capex_vec, (G_SCORE.table$capex_unalloc[counter] + G_SCORE.table$capex_alloc[counter]))
+				advin_vec<-c(advin_vec, G_SCORE.table$AdEx[counter])
+				counter = counter + 1
+				read = read + 1
+			} else{
+				# Whatever processing you want to do
+				m_ROA1 = median(ROA1_vec)
+				m_ROA2 = median(ROA2_vec)
+				m_earn_var = median(earn_var_vec)
+				m_sales_var = median(sales_var_vec)
+				m_rnd = median(rnd_vec)
+				m_capex = median(capex_vec)
+				m_advin = median(advin_vec)
+				# Another for loop to save all data
+				for(j in 1:read){
+					G_SCORE.table$median_ROA1[counter-j] = m_ROA1
+					G_SCORE.table$median_ROA2[counter-j] = m_ROA2
+					G_SCORE.table$median_earn_var[counter-j] = m_earn_var
+					G_SCORE.table$median_sales_var[counter-j] = m_sales_var
+					G_SCORE.table$median_rnd[counter-j] = m_rnd
+					G_SCORE.table$median_capex[counter-j] = m_capex
+					G_SCORE.table$median_advin[counter-j] = m_advin
+				}
+				# Resetting data
+				read = 0
+				ROA1_vec<-c()
+				ROA2_vec<-c()
+				earn_var_vec<-c()
+				sales_var_vec<-c()
+				rnd_vec<-c()
+				capex_vec<-c()
+				advin_vec<-c()
+				break
+			}
+		} else{
+			break
+		}
+		}
+		} else{
+			break
+		}
+}
 
