@@ -96,6 +96,7 @@ start_year = 2014
 setwd(dir)
 library(readxl)
 library(quantmod)
+library(doBy)
 library(PerformanceAnalytics)
 library(xts)
 
@@ -116,7 +117,7 @@ for (i in 1:num_var_file_1) {
 						exchange_file_1[i]<-1
 					} else{
 						exchange_file_1[i]<-4
-						flag<-c(flag, "warning line 119")
+						flag<-c(flag, "warning line 120")
 					}
 				}
 			}
@@ -433,3 +434,20 @@ for (i in 1:dim(data_file_1)[1]){
 names(ret)[1:2]<-c("Prowess company code", "RETURNS")
 
 RESULTS<-merge(RESULTS, ret)
+
+RESULTS<-RESULTS[complete.cases(RESULTS$RETURNS),]
+summaryBy(RETURNS~G_SCORE, data=RESULTS, FUN=c(mean,var,length))
+
+RESULTS$CLASS<-0
+for (i in 1:dim(RESULTS)[1]){
+	if((RESULTS$G_SCORE[i]  == 0) || (RESULTS$G_SCORE[i]  == 1) || (RESULTS$G_SCORE[i]  == 2)){
+		RESULTS$CLASS[i]<-"LOW"
+	}
+	if((RESULTS$G_SCORE[i]  == 3) || (RESULTS$G_SCORE[i]  == 4) || (RESULTS$G_SCORE[i]  == 5)){
+		RESULTS$CLASS[i]<-"MED"
+	}
+	if((RESULTS$G_SCORE[i]  == 6) || (RESULTS$G_SCORE[i]  == 7) || (RESULTS$G_SCORE[i]  == 8)){
+		RESULTS$CLASS[i]<-"HIGH"
+	}
+}
+summaryBy(RETURNS~CLASS, data=RESULTS, FUN=c(mean,var,length))
