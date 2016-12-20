@@ -384,3 +384,12 @@ while(1){
 		}
 }
 
+G_SCORE.table$G1<-(G_SCORE.table$ROA1 > G_SCORE.table$median_ROA1)
+G_SCORE.table$G2<-(G_SCORE.table$ROA2 > G_SCORE.table$median_ROA2)
+G_SCORE.table$G4<-(G_SCORE.table$Earnings_Variability < G_SCORE.table$median_earn_var)
+G_SCORE.table$G5<-(G_SCORE.table$Sales_Variability < G_SCORE.table$median_sales_var)
+G_SCORE.table$G6<-(G_SCORE.table$RnD > G_SCORE.table$median_rnd)
+G_SCORE.table$G7<-((G_SCORE.table$capex_unalloc + G_SCORE.table$capex_alloc) > G_SCORE.table$median_capex)
+G_SCORE.table$G8<-(G_SCORE.table$AdEx > G_SCORE.table$median_advin)
+
+G_SCORE.table$G_SCORE<-(G_SCORE.table$G8 + G_SCORE.table$G7 + G_SCORE.table$G6 + G_SCORE.table$G5 + G_SCORE.table$G4 + G_SCORE.table$G3 + G_SCORE.table$G2 + G_SCORE.table$G1)
