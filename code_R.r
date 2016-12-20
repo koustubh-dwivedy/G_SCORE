@@ -12,7 +12,14 @@
 	# install.packages("PerformanceAnalytics")
 	# install.packages("xts")
 
-# Before running this code, ensure that date is in dd-mm-yyyy format and currency is INR million
+# Before running this code, ensure that date downloaded from ProwessDx is in dd-mm-yyyy format and currency is INR million
+# Before running this code, ensure that you have the data of [start_year - 4, start_year + 2] (for variance calculation and validation)
+
+########
+# NOTE #
+########
+# I am assuming that in file_1, the pattern of: "Net sales, Total income net of P&E" repeats and that too continuously (difference of 2 between consecutive "Net sales" elements and "Total income net of P&E" elements)
+
 # To run this code, you need to enter names of 2 .xlsx files
 #	"file_1" corresponds to the file containing the following (this is got from ProwessIQ):
 		# Prowess company code
@@ -108,7 +115,7 @@ for (i in 1:num_var_file_1) {
 						exchange_file_1[i]<-1
 					} else{
 						exchange_file_1[i]<-4
-						flag<-c(flag, "warning line 101")
+						flag<-c(flag, "warning line 118")
 					}
 				}
 			}
@@ -139,4 +146,65 @@ for (i in 1:num_var_file_1){
 }
 
 G_SCORE.table<-data_file_1[,1:3]
-G_SCORE.table$Annual_Net_Income<-(data_file_1[, temp] + data_file_1[, temp+2] + data_file_1[, temp+4] + data_file_1[, temp+6])
+G_SCORE.table$Annual_Net_Income<-(data_file_1[, temp+2] + data_file_1[, temp+4] + data_file_1[, temp+6] + data_file_1[, temp+8])
+
+# Calculating G4
+# Earnings Variability
+G_SCORE.table$Earnings_Variability<-0
+for(i in 1:dim(data_file_1)[1]){
+	G_SCORE.table$Earnings_Variability[i]=var(c(data_file_1[i, temp-22], data_file_1[i, temp-20], data_file_1[i, temp-18], data_file_1[i, temp-16], data_file_1[i, temp-14], data_file_1[i, temp-12], data_file_1[i, temp-10], data_file_1[i, temp-8], data_file_1[i, temp-6], data_file_1[i, temp-4], data_file_1[i, temp-2], data_file_1[i, temp], data_file_1[i, temp+2], data_file_1[i, temp+4], data_file_1[i, temp+6], data_file_1[i, temp+8]), na.rm = TRUE)
+}
+
+
+# Calculating G5
+# Sales Variability
+temp = 0
+for (i in 1:num_var_file_1){
+	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == start_year)){
+		if((format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == start_year) && (names(data_file_1)[i] == "Net sales")){
+			temp = i
+			break
+		}
+	}
+}
+
+G_SCORE.table$Sales_Variability<-0
+for(i in 1:dim(data_file_1)[1]){
+	G_SCORE.table$Sales_Variability[i]=var(c(data_file_1[i, temp-20] - data_file_1[i, temp-22], data_file_1[i, temp-18] - data_file_1[i, temp-20], data_file_1[i, temp-16] - data_file_1[i, temp-18], data_file_1[i, temp-14] - data_file_1[i, temp-16], data_file_1[i, temp-12] - data_file_1[i, temp-14], data_file_1[i, temp-10] - data_file_1[i, temp-12], data_file_1[i, temp-8] - data_file_1[i, temp-10], data_file_1[i, temp-6] - data_file_1[i, temp-8], data_file_1[i, temp-4] - data_file_1[i, temp-6], data_file_1[i, temp-2] - data_file_1[i, temp-4], data_file_1[i, temp] - data_file_1[i, temp-2], data_file_1[i, temp+2] - data_file_1[i, temp], data_file_1[i, temp+4] - data_file_1[i, temp+2], data_file_1[i, temp+6] - data_file_1[i, temp+4], data_file_1[i, temp+8] - data_file_1[i, temp+6]), na.rm = TRUE)
+}
+
+
+# Calculating G2
+temp = 0
+for (i in 1:num_var_file_1){
+	if(!is.na(format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year + 1))){
+		if((format(as.Date(dates_file_1[1, i], format="%y-%m-%d"),"%Y") == (start_year + 1)) && (names(data_file_1)[i] == "Net cash flow from operating activities")){
+			temp = i
+			break
+		}
+	}
+}
+
+G_SCORE.table$Net_Cash_Flow<-(data_file_1[, temp])
+
+
+# Calculating G1
+data_file_3<-read_excel(file_3)
+
+avg_tot_asset_data<-data.frame(cocode=integer(),
+	avg_tot_asset=numeric(),
+	stringsAsFactors=FALSE)
+
+temp = 1
+while(1){
+	if(temp <= dim(data_file_3)[1]){
+			if((format(as.Date(data_file_3$ca_finance1_year[temp], format = "%d-%m-%Y"), "%Y") == (start_year + 1)) && (data_file_3$ca_months[temp] == 12)){
+				avg_tot_asset_data<-rbind(avg_tot_asset_data, c(data_file_3$ca_finance1_cocode[temp], as.numeric(data_file_3$ca_avg_total_assets_net_of_reval[temp])))
+			}
+			temp = temp + 1
+		} else{
+			break
+		}
+}
+names(avg_tot_asset_data)[1:2]<-c("Prowess company code", "avg_tot_asset")
+G_SCORE.table<-merge(G_SCORE.table, avg_tot_asset_data)
