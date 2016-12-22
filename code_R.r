@@ -85,7 +85,7 @@ file_2 = "mohanram_data_capital_exp.xlsx"
 # file_3
 file_3 = "mohanram_data_avg_assets.xlsx"
 # BSE or NSE stock prices. If NSE = FALSE, then BSE prices will be taken
-NSE = TRUE
+NSE = FALSE
 # start_year (the G_SCORE will be calculated for the fiscal year (start_year<->start_year+1) and validation will be done on (start_year+1<->start_year+2))
 start_year = 2014
 ##################
@@ -165,6 +165,8 @@ for (i in 1:num_var_file_1){
 	}
 }
 G_SCORE.table$BM_ratio<-(data_file_1[,temp_2+1]/data_file_1[,temp_2])
+
+
 num_firms = dim(G_SCORE.table)[1]
 num_firms = floor(num_firms)
 
@@ -232,9 +234,47 @@ for (i in 1:num_var_file_1){
 
 G_SCORE.table$Net_Cash_Flow<-(data_file_1[, temp])
 
+
+
+
+
+
+
+
+
+fno_firms = c(23354,5747,86597,5757,98964,8893,11019,12517,86607,15214,18102,18151,21042,22104,22859,24685,256066,33723,374518,28897,30136,30148,31130,33727,384105,33750,33769,33873,34162,373095,36073,149711,38924,40112,41246,371877,41860,42974,43155,43750,47858,48799,49138,50616,52418,52835,59045,53993,54885,59381,2717,61957,62987,66185,68332,71060,72607,79498,76718,82197,83013,83018,85379,85447,88258,88297,91512,92590,18395,93902,94103,94080,94175,95631,95632,96379,100283,512651,100709,96577,373589,97066,36278,98379,370967,369628,98907,99308,99905,100224,100632,109868,109874,106263,108841,109300,109856,62499,400943,122948,117230,118314,122573,385630,125401,127106,130382,132572,136443,136444,140097,140829,70319,146460,149616,153366,155600,348418,155630,155695,163226,163229,97191,164888,384616,177792,168589,174683,175214,177753,177758,183861,196588,369944,196667,27747,196608,201111,204866,225455,226821,228346,231715,236328,236460,237266,239726,239792,245437,246615,248083,265414,164646,248092,248186,248093,248165,248136,136494,251664,252196,372076,371246,215829,125123,257360,320945,142526,216946,269920,272724,272854,354608,275062)
+fno<-data.frame(cocode=integer(),
+	dummy=numeric(),
+	stringsAsFactors=FALSE)
+for (i in 1:length(fno_firms)){
+	fno<-rbind(fno, c(fno_firms[i], fno_firms[i]))
+}
+names(fno)[1:2]<-c("Prowess company code", "dummy")
+G_SCORE.table<-merge(G_SCORE.table, fno)
+G_SCORE.table<-G_SCORE.table[complete.cases(G_SCORE.table$dummy),]
+G_SCORE.table<-G_SCORE.table[complete.cases(G_SCORE.table$BM_ratio),]
+
+
+
 # Keep bottom 20 percentile firms
 G_SCORE.table<-G_SCORE.table[order(G_SCORE.table$BM_ratio, decreasing = FALSE),]
 G_SCORE.table<-G_SCORE.table[1:num_firms,]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Collecting G1
 data_file_3<-read_excel(file_3)
@@ -385,13 +425,13 @@ while(1){
 		}
 }
 
-G_SCORE.table$G1<-(G_SCORE.table$ROA1 > G_SCORE.table$median_ROA1)
-G_SCORE.table$G2<-(G_SCORE.table$ROA2 > G_SCORE.table$median_ROA2)
-G_SCORE.table$G4<-(G_SCORE.table$Earnings_Variability < G_SCORE.table$median_earn_var)
-G_SCORE.table$G5<-(G_SCORE.table$Sales_Variability < G_SCORE.table$median_sales_var)
-G_SCORE.table$G6<-(G_SCORE.table$RnD > G_SCORE.table$median_rnd)
+G_SCORE.table$G1<-(G_SCORE.table$ROA1 >= G_SCORE.table$median_ROA1)
+G_SCORE.table$G2<-(G_SCORE.table$ROA2 >= G_SCORE.table$median_ROA2)
+G_SCORE.table$G4<-(G_SCORE.table$Earnings_Variability <= G_SCORE.table$median_earn_var)
+G_SCORE.table$G5<-(G_SCORE.table$Sales_Variability <= G_SCORE.table$median_sales_var)
+G_SCORE.table$G6<-(G_SCORE.table$RnD >= G_SCORE.table$median_rnd)
 G_SCORE.table$G7<-((G_SCORE.table$capex_unalloc + G_SCORE.table$capex_alloc) > G_SCORE.table$median_capex)
-G_SCORE.table$G8<-(G_SCORE.table$AdEx > G_SCORE.table$median_advin)
+G_SCORE.table$G8<-(G_SCORE.table$AdEx >= G_SCORE.table$median_advin)
 
 G_SCORE.table$G_SCORE<-(G_SCORE.table$G8 + G_SCORE.table$G7 + G_SCORE.table$G6 + G_SCORE.table$G5 + G_SCORE.table$G4 + G_SCORE.table$G3 + G_SCORE.table$G2 + G_SCORE.table$G1)
 

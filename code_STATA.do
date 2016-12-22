@@ -1,5 +1,5 @@
 clear
-import excel "D:\Mohanram\datatest1.xls", sheet("Sheet1") firstrow
+import excel "C:\Users\TradingLab15\Desktop\G_SCORE\datatest1.xls", sheet("Sheet1") firstrow
 
 
 local member = 15
