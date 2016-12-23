@@ -85,7 +85,7 @@ file_2 = "mohanram_data_capital_exp.xlsx"
 # file_3
 file_3 = "mohanram_data_avg_assets.xlsx"
 # BSE or NSE stock prices. If NSE = FALSE, then BSE prices will be taken
-NSE = FALSE
+NSE = TRUE
 # start_year (the G_SCORE will be calculated for the fiscal year (start_year<->start_year+1) and validation will be done on (start_year+1<->start_year+2))
 start_year = 2014
 ##################
@@ -383,7 +383,7 @@ while(1){
 				sales_var_vec<-c(sales_var_vec, G_SCORE.table$Sales_Variability[counter])
 				rnd_vec<-c(rnd_vec, G_SCORE.table$RnD[counter])
 				capex_vec<-c(capex_vec, (G_SCORE.table$capex_unalloc[counter] + G_SCORE.table$capex_alloc[counter]))
-				advin_vec<-c(advin_vec, G_SCORE.table$AdEx[counter])
+				advin_vec<-c(advin_vec, G_SCORE.table$AdEx[counter]/G_SCORE.table$avg_tot_asset[counter])
 				counter = counter + 1
 				read = read + 1
 			} else{
@@ -425,13 +425,13 @@ while(1){
 		}
 }
 
-G_SCORE.table$G1<-(G_SCORE.table$ROA1 >= G_SCORE.table$median_ROA1)
-G_SCORE.table$G2<-(G_SCORE.table$ROA2 >= G_SCORE.table$median_ROA2)
-G_SCORE.table$G4<-(G_SCORE.table$Earnings_Variability <= G_SCORE.table$median_earn_var)
-G_SCORE.table$G5<-(G_SCORE.table$Sales_Variability <= G_SCORE.table$median_sales_var)
-G_SCORE.table$G6<-(G_SCORE.table$RnD >= G_SCORE.table$median_rnd)
+G_SCORE.table$G1<-(G_SCORE.table$ROA1 > G_SCORE.table$median_ROA1)
+G_SCORE.table$G2<-(G_SCORE.table$ROA2 > G_SCORE.table$median_ROA2)
+G_SCORE.table$G4<-(G_SCORE.table$Earnings_Variability < G_SCORE.table$median_earn_var)
+G_SCORE.table$G5<-(G_SCORE.table$Sales_Variability < G_SCORE.table$median_sales_var)
+G_SCORE.table$G6<-(G_SCORE.table$RnD > G_SCORE.table$median_rnd)
 G_SCORE.table$G7<-((G_SCORE.table$capex_unalloc + G_SCORE.table$capex_alloc) > G_SCORE.table$median_capex)
-G_SCORE.table$G8<-(G_SCORE.table$AdEx >= G_SCORE.table$median_advin)
+G_SCORE.table$G8<-(G_SCORE.table$AdEx/G_SCORE.table$avg_tot_asset > G_SCORE.table$median_advin)
 
 G_SCORE.table$G_SCORE<-(G_SCORE.table$G8 + G_SCORE.table$G7 + G_SCORE.table$G6 + G_SCORE.table$G5 + G_SCORE.table$G4 + G_SCORE.table$G3 + G_SCORE.table$G2 + G_SCORE.table$G1)
 
